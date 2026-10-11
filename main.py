@@ -44,7 +44,7 @@ def obtener_usuario(user_id):
     uid = str(user_id)
     if uid not in db:
         db[uid] = {
-            "goldcoins": 1000,  # Monedas iniciales por defecto
+            "goldcoins": 1000,
             "Victorias": 0,
             "Derrotas": 0,
             "Piedad": 0,
@@ -61,7 +61,6 @@ def guardar_usuario(user_id, datos):
 # ── CONFIGURACIÓN DEL BOT CON SOPORTE PARA CUALQUIER MAYÚSCULA/MINÚSCULA ──
 intents = discord.Intents.default()
 intents.message_content = True
-# case_insensitive=True permite que .apuesta, .ApUeStA, .APUESTA funcionen por igual
 bot = commands.Bot(command_prefix=".", intents=intents, case_insensitive=True)
 
 # Control de Cooldowns manual en memoria
@@ -174,14 +173,16 @@ async def apuesta(ctx, *, arg: str = None):
         datos["Piedad"] = 0
         datos["Multiplicador"] = multiplicador_actual
 
-        premio = apuesta_val * 5 * multiplicador_actual
+        premio = int(apuesta_val * 5 * multiplicador_actual)
         datos["goldcoins"] += premio
         guardar_usuario(author_id, datos)
 
         mult_total = 5 * multiplicador_actual
+        premio_fmt = f"{premio:,}".replace(',', '.')
+        saldo_fmt = f"{datos['goldcoins']:,}".replace(',', '.')
 
         embed_final = discord.Embed(
-            description=f"━━━━━━━━━━━━━━━━━━━━\n# ***X5 — EXTREMADAMENTE RARO***\n\n💎 **MULTIPLICADOR**\n➥ `x{mult_total}`\n\n🪙 **PREMIO**\n➥ `+{f'{premio:,}'.replace(',', '.')}` monedas de oro\n━━━━━━━━━━━━━━━━━━━━\n***¡Has conseguido el multiplicador más raro!***\n\n💰 **SALDO ACTUAL**\n➥ `{f'{datos[\"goldcoins\"]:,}'.replace(',', '.')}` monedas de oro\n━━━━━━━━━━━━━━━━━━━━",
+            description=f"━━━━━━━━━━━━━━━━━━━━\n# ***X5 — EXTREMADAMENTE RARO***\n\n💎 **MULTIPLICADOR**\n➥ `x{mult_total}`\n\n🪙 **PREMIO**\n➥ `+{premio_fmt}` monedas de oro\n━━━━━━━━━━━━━━━━━━━━\n***¡Has conseguido el multiplicador más raro!***\n\n💰 **SALDO ACTUAL**\n➥ `{saldo_fmt}` monedas de oro\n━━━━━━━━━━━━━━━━━━━━",
             color=0xC0C0FF
         )
         embed_final.set_footer(text=f"★★• {ctx.author.display_name}")
@@ -197,12 +198,15 @@ async def apuesta(ctx, *, arg: str = None):
         datos["Piedad"] = 0
         datos["Multiplicador"] = multiplicador_actual
 
-        premio = apuesta_val * multiplicador_actual
+        premio = int(apuesta_val * multiplicador_actual)
         datos["goldcoins"] += premio
         guardar_usuario(author_id, datos)
 
+        apuesta_fmt = f"{apuesta_val:,}".replace(',', '.')
+        premio_fmt = f"{premio:,}".replace(',', '.')
+
         embed_final = discord.Embed(
-            description=f"# Victoria 🏆\n━━━━━━━━━━━━━━━━━━━━\n🪙 **APUESTA**\n➥ `{f'{apuesta_val:,}'.replace(',', '.')}` monedas de oro\n\n💰 **PREMIO**\n➥ `+{f'{premio:,}'.replace(',', '.')}` monedas de oro\n\n📈 **MULTIPLICADOR**\n➥ `x{multiplicador_actual}`\n━━━━━━━━━━━━━━━━━━━━",
+            description=f"# Victoria 🏆\n━━━━━━━━━━━━━━━━━━━━\n🪙 **APUESTA**\n➥ `{apuesta_fmt}` monedas de oro\n\n💰 **PREMIO**\n➥ `+{premio_fmt}` monedas de oro\n\n📈 **MULTIPLICADOR**\n➥ `x{multiplicador_actual}`\n━━━━━━━━━━━━━━━━━━━━",
             color=0x00FF66
         )
         embed_final.set_footer(text=f"★★• {ctx.author.display_name}")
@@ -221,8 +225,11 @@ async def apuesta(ctx, *, arg: str = None):
         datos["Piedad"] = piedad_actual
         guardar_usuario(author_id, datos)
 
+        apuesta_fmt = f"{apuesta_val:,}".replace(',', '.')
+        saldo_fmt = f"{datos['goldcoins']:,}".replace(',', '.')
+
         embed_final = discord.Embed(
-            description=f"━━━━━━━━━━━━━━━━━━━━\n# ***DERROTA***\n\n🪙 **MONEDAS DE ORO PERDIDAS**\n➥ `-{f'{apuesta_val:,}'.replace(',', '.')}`\n━━━━━━━━━━━━━━━━━━━━\n***La fortuna no estuvo de tu lado.***\n\n💰 **SALDO ACTUAL**\n➥ `{f'{datos[\"goldcoins\"]:,}'.replace(',', '.')}` monedas de oro\n\n🍀 **PIEDAD ACUMULADA**\n➥ `{piedad_actual}%` extra de probabilidad\n━━━━━━━━━━━━━━━━━━━━",
+            description=f"━━━━━━━━━━━━━━━━━━━━\n# ***DERROTA***\n\n🪙 **MONEDAS DE ORO PERDIDAS**\n➥ `-{apuesta_fmt}`\n━━━━━━━━━━━━━━━━━━━━\n***La fortuna no estuvo de tu lado.***\n\n💰 **SALDO ACTUAL**\n➥ `{saldo_fmt}` monedas de oro\n\n🍀 **PIEDAD ACUMULADA**\n➥ `{piedad_actual}%` extra de probabilidad\n━━━━━━━━━━━━━━━━━━━━",
             color=0xFF0000
         )
         embed_final.set_footer(text=f"★★• {ctx.author.display_name}")
