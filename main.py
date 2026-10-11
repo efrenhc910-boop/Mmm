@@ -12,7 +12,5 @@ bot = commands.Bot(command_prefix=".", intents=intents)
 async def on_ready():
     print(f"✅ Conectado como {bot.user}")
 
-# Aquí irán tus comandos
-
 keep_alive()
 bot.run(os.getenv("TOKEN"))
