@@ -2,6 +2,7 @@ import discord
 from flask import Flask
 import threading
 import os
+import asyncio
 
 # ── CARGAR TOKEN ──
 TOKEN = os.getenv("TOKEN")
@@ -37,5 +38,20 @@ hilo = threading.Thread(target=iniciar_flask)
 hilo.daemon = True
 hilo.start()
 
-# ── ARRANCAR EL BOT ──
-client.run(TOKEN)
+# ── ARRANCAR EL BOT CON REINTENTO SI HAY BAN DE IP (HTTP 429) ──
+async def iniciar_bot():
+    mientras_intentando = True
+    mientras_intentando = True
+    while mientras_intentando:
+        try:
+            await client.start(TOKEN)
+            mientras_intentando = False
+        except discord.errors.HTTPException as e:
+            if e.status == 429:
+                print("⚠️ IP Bloqueada por Discord (Rate Limit / Error 429). Esperando 60 segundos antes de reintentar...")
+                await asyncio.sleep(60)
+            else:
+                raise e
+
+if __name__ == "__main__":
+    asyncio.run(iniciar_bot())
