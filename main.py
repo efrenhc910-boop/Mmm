@@ -44,7 +44,7 @@ def obtener_usuario(user_id):
     uid = str(user_id)
     if uid not in db:
         db[uid] = {
-            "goldcoins": 1000,  # Monedas iniciales por defecto (puedes cambiarlo)
+            "goldcoins": 1000,  # Monedas iniciales por defecto
             "Victorias": 0,
             "Derrotas": 0,
             "Piedad": 0,
@@ -58,10 +58,11 @@ def guardar_usuario(user_id, datos):
     db[str(user_id)] = datos
     guardar_db(db)
 
-# ── CONFIGURACIÓN DEL BOT DE DISCORD ──
+# ── CONFIGURACIÓN DEL BOT CON SOPORTE PARA CUALQUIER MAYÚSCULA/MINÚSCULA ──
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="v.", intents=intents)
+# case_insensitive=True permite que .apuesta, .ApUeStA, .APUESTA funcionen por igual
+bot = commands.Bot(command_prefix=".", intents=intents, case_insensitive=True)
 
 # Control de Cooldowns manual en memoria
 cooldowns = {}
@@ -87,7 +88,7 @@ async def apuesta(ctx, *, arg: str = None):
 
     # Validar entrada vacía
     if not arg:
-        await ctx.reply("<a:alarm:1548935861020663811> Uso: `v.apuesta 10000` o `v.apuesta all`")
+        await ctx.reply("<a:alarm:1548935861020663811> Uso: `.apuesta 10000` o `.apuesta all`")
         return
 
     # ── COOLDOWN DE 6 SEGUNDOS ──
@@ -160,7 +161,7 @@ async def apuesta(ctx, *, arg: str = None):
     tiempo_espera = random.randint(4, 8)
     await asyncio.sleep(tiempo_espera)
 
-    # Recargar datos actualizados por si acaso
+    # Recargar datos actualizados
     datos = obtener_usuario(author_id)
 
     # ── X5 MEGA PREMIO (Roll == 1000) ──
@@ -227,7 +228,7 @@ async def apuesta(ctx, *, arg: str = None):
         embed_final.set_footer(text=f"★★• {ctx.author.display_name}")
         await mensaje_embed.edit(embed=embed_final)
 
-# ── INICIAR FLASK EN SEGUNDO PLANO Y ARRANCAR BOT ──
+# ── INICIAR FLASK Y BOT ──
 if __name__ == "__main__":
     hilo = threading.Thread(target=iniciar_flask)
     hilo.daemon = True
