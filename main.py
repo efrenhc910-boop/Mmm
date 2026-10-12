@@ -20,7 +20,6 @@ def cargar_datos():
                 return {}
             return json.loads(contenido)
     except (json.JSONDecodeError, Exception):
-        # Si el archivo se corrompe por cierres abruptos en Fadehost, retorna vacío seguro
         return {}
 
 def guardar_datos(datos):
@@ -32,13 +31,16 @@ def guardar_datos(datos):
 
 _datos = cargar_datos()
 
-# Funciones seguras para leer y escribir datos
 async def get_balance(user_id):
-    val = _datos.get(f"saldo:{str(user_id)}", 0)
+    key = f"saldo:{str(user_id)}"
+    if key not in _datos:
+        # Dar un saldo inicial de prueba de 50,000 monedas si es nuevo
+        _datos[key] = 50000
+        guardar_datos(_datos)
     try:
-        return int(val)
+        return int(_datos.get(key, 50000))
     except (TypeError, ValueError):
-        return 0
+        return 50000
 
 async def set_balance(user_id, valor):
     _datos[f"saldo:{str(user_id)}"] = int(valor)
@@ -61,31 +63,20 @@ async def set_var(nombre, user_id, valor):
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 if not TOKEN:
-    raise RuntimeError("❌ Variable DISCORD_TOKEN no encontrada en el entorno de Fadehost.")
+    raise RuntimeError("❌ Variable DISCORD_TOKEN no encontrada.")
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix=".", intents=intents)
 
-# ═══════════════════════════════════════════════
-# 🟢 EVENTO: BOT ENCENDIDO
-# ═══════════════════════════════════════════════
 @bot.event
 async def on_ready():
     print(f"✅ Conectado como: {bot.user}")
-    print(f"🌐 Servidores: {len(bot.guilds)}")
     print(f"💾 Datos cargados: {len(_datos)} entradas en disco")
     print("──────────────────────────────")
 
-# ═══════════════════════════════════════════════
-# 🔧 COMANDOS BÁSICOS
-# ═══════════════════════════════════════════════
-@bot.command(name="test")
-async def test_cmd(ctx):
-    await ctx.send(f"¡Hola {ctx.author.name}! 👋 Funcionando correctamente en Fadehost.")
-
-@bot.command(name="ping")
+@bot.command(name="ping", aliases=["pong"])
 async def ping_cmd(ctx):
     await ctx.send(f"🏓 Pong! Latencia: {round(bot.latency * 1000)}ms")
 
@@ -102,18 +93,14 @@ async def saldo_cmd(ctx):
 async def apuesta_cmd(ctx, cantidad=None):
     user_id = str(ctx.author.id)
     
-    # ─── LÍMITE MÁXIMO GLOBAL ───
     saldo_actual = await get_balance(user_id)
-    if saldo_actual >= 100000000:
-        await ctx.send("❌ No puedes apostar — Has superado el límite máximo de 100 millones.")
-        return
     
-    # ─── VALIDAR ENTRADA ───
+    # Validar entrada
     if cantidad is None:
-        await ctx.send("❌ Uso correcto: `.apuesta 10000` o `.apuesta all`")
+        await ctx.send("❌ Uso correcto: `.apuesta 1000` o `.apuesta all`")
         return
     
-    # ─── ACEPTAR "ALL" ───
+    # Manejar "all"
     if cantidad.lower() == "all":
         apuesta = saldo_actual
     else:
@@ -123,50 +110,37 @@ async def apuesta_cmd(ctx, cantidad=None):
             await ctx.send("❌ Debes introducir una cantidad numérica válida o escribir `all`.")
             return
     
-    # ─── MÍNIMO Y SALDO SUFICIENTE ───
+    # Validaciones básicas
     if apuesta < 11:
         await ctx.send("❌ La apuesta mínima permitida es de `11` monedas de oro.")
         return
     if saldo_actual < apuesta:
-        await ctx.send("❌ No tienes suficientes monedas de oro para realizar esta apuesta.")
+        await ctx.send(f"❌ No tienes suficientes monedas. Tu saldo actual es de `{saldo_actual:,}`.")
         return
     
-    # ─── LÍMITE DINÁMICO POR TRAMOS ───
-    limite = 30000
-    if saldo_actual >= 100000:
-        limite = 300000
-    if saldo_actual >= 300000:
-        limite = 500000
-    if saldo_actual >= 500000:
-        limite = 1000000
-    if saldo_actual >= 1000000:
-        limite = 1000000
+    # Descontar apuesta inicial
+    nuevo_saldo_inicial = saldo_actual - apuesta
+    await set_balance(user_id, nuevo_saldo_inicial)
     
-    if apuesta > limite:
-        apuesta = limite
-    
-    # ─── DESCONTAR APUESTA INICIAL ───
-    await set_balance(user_id, saldo_actual - apuesta)
-    
-    # ─── SISTEMA DE PIEDAD ───
+    # Sistema de piedad
     piedad_guardada = await get_var("Piedad", user_id)
     probabilidad_extra = int(piedad_guardada) * 10
     umbral_victoria = 500 - probabilidad_extra
     if umbral_victoria < 1:
         umbral_victoria = 1
     
-    # ─── LANZAR MONEDA ───
+    # Lanzar moneda
     roll = random.randint(1, 1000)
     
-    # ─── ANIMACIÓN INICIAL ───
+    # Animación
     embed = Embed(title="🎲 COINFLIP", color=0xFFD700)
     embed.set_image(url="https://media.tenor.com/tDFO-BkP8P4AAAAj/moneda-girandox12-coin.gif")
     mensaje = await ctx.send(embed=embed)
     
     await ctx.channel.typing()
     
-    # Refrescar saldo post-descuento para cálculos exactos
-    saldo_actual = await get_balance(user_id)
+    # Refrescar saldo actual de base de datos
+    saldo_base = await get_balance(user_id)
     
     # ─── X5 MEGA PREMIO ───
     if roll == 1000:
@@ -179,7 +153,7 @@ async def apuesta_cmd(ctx, cantidad=None):
         await set_var("Multiplicador", user_id, multiplicador)
         
         premio = int(apuesta * 5 * multiplicador)
-        nuevo_saldo = saldo_actual + premio
+        nuevo_saldo = saldo_base + premio
         await set_balance(user_id, nuevo_saldo)
         
         embed = Embed(title="💎 ***X5 — EXTREMADAMENTE RARO***", color=0xC0C0FF)
@@ -209,7 +183,7 @@ async def apuesta_cmd(ctx, cantidad=None):
         await set_var("Multiplicador", user_id, multiplicador)
         
         premio = int(apuesta * multiplicador)
-        nuevo_saldo = saldo_actual + premio
+        nuevo_saldo = saldo_base + premio
         await set_balance(user_id, nuevo_saldo)
         
         embed = Embed(title="🏆 Victoria", color=0x00FF66)
@@ -221,7 +195,7 @@ async def apuesta_cmd(ctx, cantidad=None):
 ➥ `+{premio:,}` monedas de oro
 
 📈 **MULTIPLICADOR**
-➥ `x{multiplicador:.1f}
+➥ `x{multiplicador:.1f}`
 
 💰 **SALDO ACTUAL**
 ➥ `{nuevo_saldo:,}` monedas de oro
@@ -232,7 +206,6 @@ async def apuesta_cmd(ctx, cantidad=None):
     # ─── DERROTA ───
     else:
         derrotas = int(await get_var("Derrotas", user_id)) + 1
-        
         piedad_actual = int(piedad_guardada)
         if derrotas >= 2:
             piedad_actual += 10
@@ -242,7 +215,7 @@ async def apuesta_cmd(ctx, cantidad=None):
         await set_var("Multiplicador", user_id, 2.0)
         await set_var("Piedad", user_id, piedad_actual)
         
-        nuevo_saldo = saldo_actual  # Ya se había descontado al inicio
+        nuevo_saldo = saldo_base  # El saldo ya se había descontado al inicio
         
         embed = Embed(title="❌ ***DERROTA***", color=0xFF0000)
         embed.description = f"""━━━━━━━━━━━━━━━━━━━━
@@ -260,8 +233,5 @@ async def apuesta_cmd(ctx, cantidad=None):
         embed.set_footer(text=ctx.author.display_name)
         await mensaje.edit(embed=embed)
 
-# ═══════════════════════════════════════════════
-# 🚀 INICIAR EL BOT
-# ═══════════════════════════════════════════════
 if __name__ == "__main__":
     bot.run(TOKEN)
