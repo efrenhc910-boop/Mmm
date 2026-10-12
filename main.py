@@ -7,11 +7,11 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 # Verificar que el token exista
 if not TOKEN:
-    raise RuntimeError("❌ No se encontró la variable DISCORD_TOKEN en FadeHost")
+    raise RuntimeError("❌ No se encontró la variable DISCORD_TOKEN")
 
 # Configurar intents
 intents = discord.Intents.default()
-intents.message_content = True  # Necesario para leer mensajes
+intents.message_content = True
 
 # Crear el bot
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -26,7 +26,7 @@ async def on_ready():
 # Comando de prueba
 @bot.command(name="test")
 async def test_command(ctx):
-    await ctx.send(f"¡Hola {ctx.author.name}! 👋 El bot funciona correctamente.")
+    await ctx.send(f"¡Hola {ctx.author.name}! 👋 Funcionando correctamente.")
 
 # Comando ping
 @bot.command(name="ping")
