@@ -1,51 +1,61 @@
 import os
+import random
 import asyncio
 import discord
 from discord import Embed
 from discord.ext import commands
 
 # ═══════════════════════════════════════════
-# ⚙️ CONFIGURACIÓN
+# ⚙️ CONFIGURACIÓN DEL BOT
 # ═══════════════════════════════════════════
 TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = True  # ⚠️ ¡NO OLVIDES ACTIVAR ESTO EN DISCORD!
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ═══════════════════════════════════════════
-# 🟢 BOT ENCENDIDO
+# 🟢 CUANDO EL BOT SE ENCIENDE
 # ═══════════════════════════════════════════
 @bot.event
 async def on_ready():
-    print(f"✅ Conectado: {bot.user}")
-    print(f"📋 Comandos: {[c.name for c in bot.commands]}")
+    print("\n" + "=" * 50)
+    print(f"✅ BOT CONECTADO COMO: {bot.user}")
+    print(f"🌐 SERVIDORES: {len(bot.guilds)}")
+    print("📋 COMANDOS CARGADOS:")
+    for comando in bot.commands:
+        print(f"   ✓ !{comando.name}")
+    print("=" * 50 + "\n")
 
 # ═══════════════════════════════════════════
-# ❌ MANEJO DE ERRORES (para que no sean silenciosos)
+# ❌ MANEJO DE ERRORES (para ver qué falla)
 # ═══════════════════════════════════════════
 @bot.event
 async def on_command_error(ctx, error):
-    print(f"❌ ERROR: {error}")
-    await ctx.send(f"⚠️ Error: {error}")
+    if isinstance(error, commands.CommandNotFound):
+        print(f"⚠️ Comando no encontrado: !{ctx.invoked_with}")
+        return await ctx.send(f"❌ El comando `!{ctx.invoked_with}` no existe")
+    print(f"❌ ERROR en !{ctx.command}: {error}")
+    await ctx.send("⚠️ Ocurrió un error al ejecutar el comando")
 
 # ═══════════════════════════════════════════
-# 🧪 COMANDO DE PRUEBA
+# 🏓 COMANDO DE PRUEBA
 # ═══════════════════════════════════════════
 @bot.command(name="ping")
 async def ping_cmd(ctx):
-    await ctx.send(f"🏓 Pong! {round(bot.latency * 1000)}ms")
+    latencia = round(bot.latency * 1000)
+    await ctx.send(f"🏓 Pong! {latencia}ms")
 
 # ═══════════════════════════════════════════
-# 🎲 APUESTA BÁSICA (calcula y duplica de verdad)
+# 🎲 COMANDO DE APUESTA — VERSIÓN COMPLETA
 # ═══════════════════════════════════════════
 @bot.command(name="apuesta")
-async def apuesta_cmd(ctx, cantidad=None):
-    # PASO 1: Validar que el usuario escribió un número
+async def apuesta_completa(ctx, cantidad=None):
+    # ─── PASO 1: Validar entrada ───
     if cantidad is None:
-        return await ctx.send("❌ Escribe: `!apuesta 100`")
+        return await ctx.send("❌ Usa: `!apuesta 100`")
     
-    # PASO 2: Convertir texto a número (para poder multiplicar)
+    # ─── PASO 2: Convertir a número ───
     try:
         apostado = int(cantidad)
     except ValueError:
@@ -54,40 +64,39 @@ async def apuesta_cmd(ctx, cantidad=None):
     if apostado <= 0:
         return await ctx.send("❌ La cantidad debe ser mayor a 0")
     
-    # PASO 3: Cálculo REAL con variables
-    ganancia = apostado * 2          # ← Aquí se duplica de verdad
-    total = apostado + ganancia      # ← Total que recibe el usuario
+    # ─── PASO 3: Cálculos matemáticos REALES ───
+    ganancia = apostado * 2
+    total_recibido = apostado + ganancia
     
-    # PASO 4: Crear embed inicial (la "animación")
-    embed_inicial = Embed(
+    # ─── PASO 4: Embed inicial (animación) ───
+    embed_cargando = Embed(
         title="🎲 Lanzando moneda...",
         description=f"Apostaste: **{apostado}** monedas",
-        color=0xFFD700  # Dorado
+        color=0xFFD700
     )
-    embed_inicial.set_footer(text=ctx.author.display_name)
+    embed_cargando.set_thumbnail(url="https://media.tenor.com/tDFO-BkP8P4AAAAj/moneda-girandox12-coin.gif")
+    embed_cargando.set_footer(text=ctx.author.display_name)
     
-    # Enviar el mensaje y guardarlo para editarlo después
-    mensaje = await ctx.send(embed=embed_inicial)
+    # Enviar mensaje y GUARDARLO para editarlo después
+    mensaje = await ctx.send(embed=embed_cargando)
     
-    # PASO 5: Esperar 2 segundos (simula el giro)
+    # ─── PASO 5: Esperar 2 segundos ───
     await asyncio.sleep(2)
     
-    # PASO 6: Crear embed final con el resultado calculado
-    embed_final = Embed(
+    # ─── PASO 6: Embed final con resultado ───
+    embed_resultado = Embed(
         title="✅ ¡GANASTE!",
-        description=f"""
-🪙 Apostaste: **{apostado}**
-💰 Ganancia: **+{ganancia}**
-💎 Total recibido: **{total}**
-        """,
-        color=0x00FF00  # Verde
+        color=0x00FF00
     )
-    embed_final.set_footer(text=ctx.author.display_name)
+    embed_resultado.add_field(name="💰 Apostaste", value=f"{apostado}", inline=True)
+    embed_resultado.add_field(name="💵 Ganancia", value=f"+{ganancia}", inline=True)
+    embed_resultado.add_field(name="💎 Total", value=f"{total_recibido}", inline=True)
+    embed_resultado.set_footer(text=ctx.author.display_name)
     
-    # PASO 7: EDITAR el mismo mensaje (no enviar uno nuevo)
-    await mensaje.edit(embed=embed_final)
+    # ─── PASO 7: EDITAR el mismo mensaje ───
+    await mensaje.edit(embed=embed_resultado)
 
 # ═══════════════════════════════════════════
-# 🚀 INICIAR BOT
+# 🚀 INICIAR EL BOT
 # ═══════════════════════════════════════════
 bot.run(TOKEN)
