@@ -71,9 +71,22 @@ async def on_ready():
 @bot.command(name="saldo")
 async def saldo_cmd(ctx):
     saldo = await obtener_saldo(str(ctx.author.id))
-    embed = Embed(title="🏦 TU SALDO", color=0xFFD700)
-    embed.add_field(name="Monedas de oro", value=f"**{saldo:,}**", inline=False)
-    embed.set_footer(text=ctx.author.display_name)
+    
+    embed = Embed(
+        title="<a:Crown1:1548943482561765476>  BÓVEDA DE ORO",
+        description="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        color=0xFFD700
+    )
+    embed.add_field(
+        name="<a:money:1548943165040496793> Monedas de Oro",
+        value=f"```yaml\n{saldo:,}\n```",
+        inline=False
+    )
+    embed.set_thumbnail(url="https://media.tenor.com/tDFO-BkP8P4AAAAj/moneda-girandox12-coin.gif")
+    embed.set_footer(
+        text=f"Revisado por: {ctx.author.display_name}",
+        icon_url=ctx.author.avatar.url
+    )
     await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
@@ -86,58 +99,82 @@ async def apuesta_cmd(ctx, cantidad=None):
 
     if cantidad is None:
         return await ctx.send("❌ Uso: `!apuesta 100`")
-    
+
     try:
         apostado = int(cantidad)
     except ValueError:
         return await ctx.send("❌ Escribe un número válido")
-    
+
     if apostado <= 0:
         return await ctx.send("❌ Debe ser mayor a 0")
-    
+
     saldo_actual = await obtener_saldo(user_id)
-    
+
     if saldo_actual < apostado:
         return await ctx.send(
-            f"❌ No tienes suficiente dinero.\n"
-            f"💰 Tu saldo: **{saldo_actual:,}**"
+            f"<a:fail:1548936569098866758> No tienes suficiente dinero.\n"
+            f"<a:money:1548943165040496793> Tu saldo: **{saldo_actual:,}**"
         )
-    
+
     # Descontar apuesta
     await establecer_saldo(user_id, saldo_actual - apostado)
-    
-    # Animación
+
+    # 🎲 Animación — Lanzando moneda
     embed_espere = Embed(
-        title="🎲 Lanzando moneda...",
-        description=f"Apostaste: **{apostado:,}**",
-        color=0xFFD700
+        title="<a:NewFlame:1548943658521202780>  LANZANDO MONEDA...",
+        description=f"""
+<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
+
+<a:PinkFlameFlicker:1547845151844470807> **Apostaste:** `{apostado:,}` monedas
+
+<a:time:1548940539335024660> Espera un momento...
+        """,
+        color=0x9B59B6
     )
-    embed_espere.set_footer(text=nombre)
+    embed_espere.set_footer(text=f"Buenas suerte, {nombre}! 🍀")
     mensaje = await ctx.send(embed=embed_espere)
     await asyncio.sleep(2)
-    
+
     # 50% Ganar / 50% Perder
     if random.choice([True, False]):
-        # ✅ GANAR
+        # ✅ ¡GANASTE!
         ganancia = apostado * 2
         await agregar_saldo(user_id, ganancia)
         saldo_nuevo = await obtener_saldo(user_id)
-        
-        embed = Embed(title="✅ ¡GANASTE!", color=0x00FF00)
-        embed.add_field(name="💰 Apostaste", value=f"{apostado:,}", inline=True)
-        embed.add_field(name="💵 Ganaste", value=f"+{ganancia:,}", inline=True)
-        embed.add_field(name="💎 Saldo actual", value=f"{saldo_nuevo:,}", inline=True)
-        embed.set_footer(text=f"{nombre} 🎉")
+
+        embed = Embed(
+            title="<a:Vip:1548936294489391167>  ¡VICTORIA!",
+            description=f"""
+<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
+
+<a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
+<a:visa:1548943205368860742> **Ganancia:** `+{ganancia:,}`
+<:CROWN:1547845401355227257> **Saldo:** `{saldo_nuevo:,}`
+
+<a:chido:1548939480302620672> ¡Felicidades, {nombre}! ¡Has ganado!
+            """,
+            color=0x00FF66
+        )
+        embed.set_thumbnail(url="https://media.tenor.com/3VntRSuL2kcAAAAi/party-popper-confetti.gif")
     else:
-        # ❌ PERDER
+        # ❌ ¡PERDISTE!
         saldo_nuevo = await obtener_saldo(user_id)
-        
-        embed = Embed(title="❌ ¡PERDISTE!", color=0xFF0000)
-        embed.add_field(name="💰 Apostaste", value=f"{apostado:,}", inline=True)
-        embed.add_field(name="💵 Perdiste", value=f"-{apostado:,}", inline=True)
-        embed.add_field(name="💎 Saldo actual", value=f"{saldo_nuevo:,}", inline=True)
-        embed.set_footer(text=f"{nombre} 😢")
-    
+
+        embed = Embed(
+            title="<a:fail:1548936569098866758>  DERROTA",
+            description=f"""
+<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
+
+<a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
+<:bad:1548942828195938354> **Perdiste:** `-{apostado:,}`
+<:CROWN:1547845401355227257> **Saldo:** `{saldo_nuevo:,}`
+
+<:sad:1548943352882528256> Ánimo, {nombre}! ¡La suerte cambia!
+            """,
+            color=0xFF4444
+        )
+        embed.set_thumbnail(url="https://media.tenor.com/-UH9FZ_uZw4AAAAi/sad-emoji.gif")
+
     await mensaje.edit(embed=embed)
 
 # ═══════════════════════════════════════════
@@ -145,35 +182,55 @@ async def apuesta_cmd(ctx, cantidad=None):
 # ═══════════════════════════════════════════
 @bot.command(name="adm")
 async def adm_cmd(ctx, usuario=None, cantidad=None):
-    # ⚠️ PON TU ID DE DISCORD AQUÍ ABAJO
+    # ⚠️ TU ID YA ESTÁ CONFIGURADO
     MI_ID = "1430296740753313875"
-    
+
     if str(ctx.author.id) != MI_ID:
-        return await ctx.send("❌ No tienes permiso para usar este comando")
-    
+        return await ctx.send("<a:fail:1548936569098866758> No tienes permiso para usar este comando")
+
     if usuario is None or cantidad is None:
-        return await ctx.send("❌ Uso: `!adm @usuario 5000`")
-    
+        return await ctx.send("<a:alarm:1548935861020663811> Uso: `!adm @usuario 5000`")
+
     if not ctx.message.mentions:
-        return await ctx.send("❌ Menciona a un usuario")
-    
+        return await ctx.send("<a:alarm:1548935861020663811> Menciona a un usuario")
+
     try:
         cantidad = int(cantidad)
     except ValueError:
-        return await ctx.send("❌ Escribe un número válido")
-    
+        return await ctx.send("<a:alarm:1548935861020663811> Escribe un número válido")
+
     if cantidad <= 0:
-        return await ctx.send("❌ La cantidad debe ser mayor a 0")
-    
+        return await ctx.send("<a:alarm:1548935861020663811> La cantidad debe ser mayor a 0")
+
     mencion = ctx.message.mentions[0]
     await agregar_saldo(str(mencion.id), cantidad)
     saldo_nuevo = await obtener_saldo(str(mencion.id))
-    
-    embed = Embed(title="🔧 ADMIN — Dinero agregado", color=0x9B59B6)
-    embed.add_field(name="👤 Usuario", value=f"{mencion.mention}", inline=False)
-    embed.add_field(name="💵 Cantidad", value=f"+{cantidad:,}", inline=False)
-    embed.add_field(name="💰 Nuevo saldo", value=f"{saldo_nuevo:,}", inline=False)
-    
+
+    embed = Embed(
+        title="<:BlueCrown:1547845636840230976>  PANEL DE ADMINISTRACIÓN",
+        description=f"<a:Regalo:1548971616883712051> Dinero agregado exitosamente",
+        color=0x9B59B6
+    )
+    embed.add_field(
+        name="<a:Vip:1548936294489391167> Usuario",
+        value=f"{mencion.mention}",
+        inline=False
+    )
+    embed.add_field(
+        name="<a:money:1548943165040496793> Cantidad Agregada",
+        value=f"`+{cantidad:,}`",
+        inline=False
+    )
+    embed.add_field(
+        name="<:CROWN:1547845401355227257> Nuevo Saldo",
+        value=f"`{saldo_nuevo:,}`",
+        inline=False
+    )
+    embed.set_footer(
+        text=f"Ejecutado por: {ctx.author.display_name}",
+        icon_url=ctx.author.avatar.url
+    )
+
     await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
