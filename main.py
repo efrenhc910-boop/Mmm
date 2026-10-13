@@ -94,7 +94,7 @@ async def saldo_cmd(ctx):
     await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
-# 🎲 !apuesta
+# 🎲 !apuesta — Corregido
 # ═══════════════════════════════════════════
 @bot.command(name="apuesta")
 async def apuesta_cmd(ctx, cantidad=None):
@@ -120,7 +120,7 @@ async def apuesta_cmd(ctx, cantidad=None):
             f"<a:money:1548943165040496793> Tu saldo: **{saldo_actual:,}**"
         )
 
-    # Descontar apuesta
+    # ✅ Se descuenta INMEDIATAMENTE al apostar
     await establecer_saldo(user_id, saldo_actual - apostado)
 
     # 🎲 Animación — Lanzando moneda
@@ -129,6 +129,7 @@ async def apuesta_cmd(ctx, cantidad=None):
         description=f"""
 
 <a:PinkFlameFlicker:1547845151844470807> **Apostaste:** `{apostado:,}` monedas
+<:CROWN:1547845401355227257> **Saldo después de apostar:** `{saldo_actual - apostado:,}`
 
 <a:time:1548940539335024660> Espera un momento...
         """,
@@ -140,9 +141,9 @@ async def apuesta_cmd(ctx, cantidad=None):
 
     # 50% Ganar / 50% Perder
     if random.choice([True, False]):
-        # ✅ ¡GANASTE!
-        ganancia = apostado * 2
-        await agregar_saldo(user_id, ganancia)
+        # ✅ ¡GANASTE! → Recibes el doble (tu apuesta + ganancia)
+        ganancia_total = apostado * 2
+        await agregar_saldo(user_id, ganancia_total)
         saldo_nuevo = await obtener_saldo(user_id)
 
         embed = Embed(
@@ -150,15 +151,16 @@ async def apuesta_cmd(ctx, cantidad=None):
             description=f"""
 
 <a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
-<a:visa:1548943205368860742> **Ganancia:** `+{ganancia:,}`
-<:CROWN:1547845401355227257> **Saldo:** `{saldo_nuevo:,}`
+<a:visa:1548943205368860742> **Ganancia neta:** `+{apostado:,}`
+<a:Regalo:1548971616883712051> **Recibes:** `+{ganancia_total:,}`
+<:CROWN:1547845401355227257> **Saldo actual:** `{saldo_nuevo:,}`
 
-<a:chido:1548939480302620672> ¡Felicidades, {nombre}! ¡Has ganado!
+<a:chido:1548939480302620672> ¡Felicidades, {nombre}! ¡Ganaste el doble!
             """,
             color=0x00FF66
         )
     else:
-        # ❌ ¡PERDISTE!
+        # ❌ ¡PERDISTE! → No recuperas lo apostado
         saldo_nuevo = await obtener_saldo(user_id)
 
         embed = Embed(
@@ -167,7 +169,7 @@ async def apuesta_cmd(ctx, cantidad=None):
 
 <a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
 <:bad:1548942828195938354> **Perdiste:** `-{apostado:,}`
-<:CROWN:1547845401355227257> **Saldo:** `{saldo_nuevo:,}`
+<:CROWN:1547845401355227257> **Saldo actual:** `{saldo_nuevo:,}`
 
 <:sad:1548943352882528256> Ánimo, {nombre}! ¡La suerte cambia!
             """,
