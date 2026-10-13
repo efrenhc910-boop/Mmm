@@ -55,12 +55,12 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True
 
-# ✅ case_insensitive = True → !Adm, !aDm, !dONA funcionan igual
 bot = commands.Bot(
     command_prefix="!",
     intents=intents,
     case_insensitive=True
 )
+bot.uptime = discord.utils.utcnow()  # ✅ Para calcular tiempo activo
 
 # ═══════════════════════════════════════════
 # 🟢 ENCENDIDO
@@ -69,6 +69,77 @@ bot = commands.Bot(
 async def on_ready():
     print(f"\n✅ Conectado: {bot.user}")
     print(f"📋 Comandos: {[c.name for c in bot.commands]}\n")
+
+# ═══════════════════════════════════════════
+# 🔄 EVENTO DE MENCIÓN — ¡NO LO BORRES!
+# ═══════════════════════════════════════════
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    
+    # Si mencionan al bot, muestra las estadísticas
+    if bot.user.mentioned_in(message) and not message.mention_everyone:
+        ctx = await bot.get_context(message)
+        if not ctx.valid:
+            await mostrar_stats(ctx)
+    
+    # ✅ ¡NUNCA BORRES ESTA LÍNEA! Procesa los comandos normales
+    await bot.process_commands(message)
+
+# ═══════════════════════════════════════════
+# 📊 FUNCIÓN COMPARTIDA DE STATS
+# ═══════════════════════════════════════════
+async def mostrar_stats(ctx):
+    colores_neon = [
+        0xFF0055, 0x00F0FF, 0x7000FF, 0xFF00F7, 0x00FF66,
+        0xFFB700, 0xFF5722, 0x00E5FF, 0x9D00FF, 0xFF0033
+    ]
+    color = random.choice(colores_neon)
+    nombre_bot = str(bot.user)
+    tiempo_activo = f"En línea desde {discord.utils.format_dt(bot.uptime, style='R')}"
+    
+    embed = Embed(
+        title=f"# 𝙎𝙩𝙖𝙩𝙨 𝙙𝙚 {nombre_bot}",
+        description=f"""
+### 📊 𝙄𝙣𝙛𝙤𝙧𝙢𝙖𝙘𝙞𝙤́𝙣 𝙂𝙚𝙣𝙚𝙧𝙖𝙡
+> 🤖 **𝙉𝙤𝙢𝙗𝙧𝙚:** `{nombre_bot}`
+> 👑 **𝘾𝙧𝙚𝙖𝙙𝙤𝙧:** `𝕰𝖝𝖙𝖊𝖗𝖒𝖎𝖓𝖆𝖙𝖔𝖗`
+> ⏳ **𝙏𝙞𝙚𝙢𝙥𝙤 𝘼𝙘𝙩𝙞𝙫𝙤:** `{tiempo_activo}`
+        """,
+        color=color
+    )
+    if bot.user.avatar:
+        embed.set_thumbnail(url=bot.user.avatar.url)
+    embed.set_footer(
+        text=f"Solicitado por {ctx.author.display_name}",
+        icon_url=ctx.author.avatar.url
+    )
+    embed.timestamp = discord.utils.utcnow()
+    
+    # Crear botones
+    view = discord.ui.View(timeout=None)
+    
+    @discord.ui.button(label="Mi DC", emoji="🥇", style=discord.ButtonStyle.gray)
+    async def servidor_btn(interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("¡Únete a mi servidor! https://discord.gg/tuenlace", ephemeral=True)
+    
+    @discord.ui.button(label="Invitame", emoji="🎇", style=discord.ButtonStyle.gray)
+    async def invitar_btn(interaction: discord.Interaction, button: discord.ui.Button):
+        enlace = f"https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot"
+        await interaction.response.send_message(f"¡Invítame a tu servidor!\n{enlace}", ephemeral=True)
+    
+    view.add_item(servidor_btn)
+    view.add_item(invitar_btn)
+    
+    await ctx.send(embed=embed, view=view)
+
+# ═══════════════════════════════════════════
+# 📊 !stats
+# ═══════════════════════════════════════════
+@bot.command(name="stats")
+async def stats_cmd(ctx):
+    await mostrar_stats(ctx)
 
 # ═══════════════════════════════════════════
 # 💰 !saldo
@@ -94,7 +165,7 @@ async def saldo_cmd(ctx):
     await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
-# 🎲 !apuesta — Corregido
+# 🎲 !apuesta
 # ═══════════════════════════════════════════
 @bot.command(name="apuesta")
 async def apuesta_cmd(ctx, cantidad=None):
@@ -123,7 +194,6 @@ async def apuesta_cmd(ctx, cantidad=None):
     # ✅ Se descuenta INMEDIATAMENTE al apostar
     await establecer_saldo(user_id, saldo_actual - apostado)
 
-    # 🎲 Animación — Lanzando moneda
     embed_espere = Embed(
         title="<a:NewFlame:1548943658521202780>  LANZANDO MONEDA...",
         description=f"""
@@ -139,9 +209,7 @@ async def apuesta_cmd(ctx, cantidad=None):
     mensaje = await ctx.send(embed=embed_espere)
     await asyncio.sleep(2)
 
-    # 50% Ganar / 50% Perder
     if random.choice([True, False]):
-        # ✅ ¡GANASTE! → Recibes el doble (tu apuesta + ganancia)
         ganancia_total = apostado * 2
         await agregar_saldo(user_id, ganancia_total)
         saldo_nuevo = await obtener_saldo(user_id)
@@ -160,7 +228,6 @@ async def apuesta_cmd(ctx, cantidad=None):
             color=0x00FF66
         )
     else:
-        # ❌ ¡PERDISTE! → No recuperas lo apostado
         saldo_nuevo = await obtener_saldo(user_id)
 
         embed = Embed(
@@ -179,7 +246,7 @@ async def apuesta_cmd(ctx, cantidad=None):
     await mensaje.edit(embed=embed)
 
 # ═══════════════════════════════════════════
-# 💸 !dona — Transferir monedas
+# 💸 !dona
 # ═══════════════════════════════════════════
 @bot.command(name="dona")
 async def dona_cmd(ctx, *args):
@@ -250,7 +317,7 @@ async def dona_cmd(ctx, *args):
     await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
-# 🔧 !adm — SOLO TÚ
+# 🔧 !adm
 # ═══════════════════════════════════════════
 @bot.command(name="adm")
 async def adm_cmd(ctx, usuario=None, cantidad=None):
@@ -304,5 +371,19 @@ async def adm_cmd(ctx, usuario=None, cantidad=None):
 
     await ctx.send(embed=embed)
 
-# alch nosé 
+# ═══════════════════════════════════════════
+# 📌 AQUÍ ABAJO PEGA TUS COMANDOS NUEVOS 👇
+# ═══════════════════════════════════════════
+
+
+
+
+
+
+
+
+
+# ═══════════════════════════════════════════
+# 🚀 INICIAR
+# ═══════════════════════════════════════════
 bot.run(TOKEN)
