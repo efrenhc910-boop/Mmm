@@ -148,7 +148,6 @@ async def apuesta_cmd(ctx, cantidad=None):
         embed = Embed(
             title="<a:Vip:1548936294489391167>  ¡VICTORIA!",
             description=f"""
-<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
 
 <a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
 <a:visa:1548943205368860742> **Ganancia:** `+{ganancia:,}`
@@ -165,7 +164,6 @@ async def apuesta_cmd(ctx, cantidad=None):
         embed = Embed(
             title="<a:fail:1548936569098866758>  DERROTA",
             description=f"""
-<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
 
 <a:money:1548943165040496793> **Apostaste:** `{apostado:,}`
 <:bad:1548942828195938354> **Perdiste:** `-{apostado:,}`
