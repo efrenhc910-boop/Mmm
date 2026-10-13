@@ -55,7 +55,12 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+# ✅ case_insensitive = True → !Adm, !aDm, !dONA funcionan igual
+bot = commands.Bot(
+    command_prefix="!",
+    intents=intents,
+    case_insensitive=True
+)
 
 # ═══════════════════════════════════════════
 # 🟢 ENCENDIDO
@@ -71,7 +76,7 @@ async def on_ready():
 @bot.command(name="saldo")
 async def saldo_cmd(ctx):
     saldo = await obtener_saldo(str(ctx.author.id))
-    
+
     embed = Embed(
         title="<a:Crown1:1548943482561765476>  BÓVEDA DE ORO",
         description="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
@@ -82,7 +87,6 @@ async def saldo_cmd(ctx):
         value=f"```yaml\n{saldo:,}\n```",
         inline=False
     )
-    embed.set_thumbnail(url="https://media.tenor.com/tDFO-BkP8P4AAAAj/moneda-girandox12-coin.gif")
     embed.set_footer(
         text=f"Revisado por: {ctx.author.display_name}",
         icon_url=ctx.author.avatar.url
@@ -131,7 +135,7 @@ async def apuesta_cmd(ctx, cantidad=None):
         """,
         color=0x9B59B6
     )
-    embed_espere.set_footer(text=f"Buenas suerte, {nombre}! 🍀")
+    embed_espere.set_footer(text=f"Buena suerte, {nombre}! 🍀")
     mensaje = await ctx.send(embed=embed_espere)
     await asyncio.sleep(2)
 
@@ -155,7 +159,6 @@ async def apuesta_cmd(ctx, cantidad=None):
             """,
             color=0x00FF66
         )
-        embed.set_thumbnail(url="https://media.tenor.com/3VntRSuL2kcAAAAi/party-popper-confetti.gif")
     else:
         # ❌ ¡PERDISTE!
         saldo_nuevo = await obtener_saldo(user_id)
@@ -173,16 +176,85 @@ async def apuesta_cmd(ctx, cantidad=None):
             """,
             color=0xFF4444
         )
-        embed.set_thumbnail(url="https://media.tenor.com/-UH9FZ_uZw4AAAAi/sad-emoji.gif")
 
     await mensaje.edit(embed=embed)
+
+# ═══════════════════════════════════════════
+# 💸 !dona — Transferir monedas
+# ═══════════════════════════════════════════
+@bot.command(name="dona")
+async def dona_cmd(ctx, *args):
+    if len(args) < 2:
+        return await ctx.send(
+            "<a:alarm:1548935861020663811> Uso: `!dona @usuario 1000` o `!dona 1000 @usuario`"
+        )
+    
+    mencion = ctx.message.mentions[0] if ctx.message.mentions else None
+    if not mencion:
+        return await ctx.send("<a:alarm:1548935861020663811> Debes mencionar a un usuario.")
+    
+    cantidad = None
+    for arg in args:
+        if arg.isdigit():
+            cantidad = int(arg)
+            break
+    
+    if cantidad is None:
+        return await ctx.send("❌ Debes introducir una cantidad válida.")
+    
+    if cantidad <= 0:
+        return await ctx.send("<a:alarm:1548935861020663811> La cantidad debe ser mayor a `0`.")
+    
+    saldo_remitente = await obtener_saldo(str(ctx.author.id))
+    
+    if saldo_remitente < cantidad:
+        return await ctx.send(
+            f"<a:alarm:1548935861020663811> No tienes suficientes monedas de oro.\n"
+            f"💰 Tu saldo: **{saldo_remitente:,}**"
+        )
+    
+    if mencion.id == ctx.author.id:
+        return await ctx.send("<a:alarm:1548935861020663811> No puedes darte monedas de oro a ti mismo.")
+    
+    await establecer_saldo(str(ctx.author.id), saldo_remitente - cantidad)
+    saldo_destino = await obtener_saldo(str(mencion.id))
+    await establecer_saldo(str(mencion.id), saldo_destino + cantidad)
+    saldo_nuevo = await obtener_saldo(str(ctx.author.id))
+    
+    embed = Embed(
+        title="<a:emoji_45:1548971921738305556>  ENTREGA COMPLETADA",
+        description="━━━━━━━━━━━━━━━━━━━━",
+        color=0xFFD700
+    )
+    embed.add_field(
+        name="👤 REMITENTE",
+        value=f"➥ {ctx.author.display_name}",
+        inline=False
+    )
+    embed.add_field(
+        name="<a:Regalo:1548971616883712051> DESTINATARIO",
+        value=f"➥ {mencion.display_name}",
+        inline=False
+    )
+    embed.add_field(
+        name="<a:emoji_45:1548971921738305556> CANTIDAD ENTREGADA",
+        value=f"➥ `{cantidad:,}` monedas de oro",
+        inline=False
+    )
+    embed.add_field(
+        name="<a:emoji_45:1548971921738305556> TU SALDO ACTUAL",
+        value=f"➥ `{saldo_nuevo:,}` monedas de oro",
+        inline=False
+    )
+    embed.set_footer(text="The Most Wanted Corporation")
+    
+    await ctx.send(embed=embed)
 
 # ═══════════════════════════════════════════
 # 🔧 !adm — SOLO TÚ
 # ═══════════════════════════════════════════
 @bot.command(name="adm")
 async def adm_cmd(ctx, usuario=None, cantidad=None):
-    # ⚠️ TU ID YA ESTÁ CONFIGURADO
     MI_ID = "1430296740753313875"
 
     if str(ctx.author.id) != MI_ID:
@@ -232,6 +304,16 @@ async def adm_cmd(ctx, usuario=None, cantidad=None):
     )
 
     await ctx.send(embed=embed)
+
+# ═══════════════════════════════════════════
+# � AQUÍ ABAJO PEGA OTROS COMANDOS NUEVOS
+# ═══════════════════════════════════════════
+
+
+
+
+
+
 
 # ═══════════════════════════════════════════
 # 🚀 INICIAR
