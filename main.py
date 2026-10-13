@@ -222,7 +222,7 @@ async def apuesta_cmd(ctx, cantidad=None):
     embed_espere.set_thumbnail(url="https://media.tenor.com/tDFO-BkP8P4AAAAj/moneda-girandox12-coin.gif")
     embed_espere.set_footer(text=f"Buena suerte, {nombre}! 🍀")
     mensaje = await ctx.send(embed=embed_espere)
-    await asyncio.sleep(2)
+    await asyncio.sleep(5)
 
     if random.choice([True, False]):
         ganancia_total = apostado * 2
