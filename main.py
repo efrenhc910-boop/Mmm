@@ -389,14 +389,150 @@ async def adm_cmd(ctx, usuario=None, cantidad=None):
 # ═══════════════════════════════════════════
 # 📌 AQUÍ ABAJO PEGA TUS COMANDOS NUEVOS 👇
 # ═══════════════════════════════════════════
+# ═══════════════════════════════════════════
+# ⭕ !rallado — TRES EN RAYA ❌
+# ═══════════════════════════════════════════
+@bot.command(name="rallado")
+async def rallado_cmd(ctx, oponente: discord.Member = None):
+    jugador1 = ctx.author  # ❌ Siempre empieza quien escribe el comando
+    jugador2 = oponente
 
+    # Validaciones
+    if not jugador2:
+        return await ctx.send("❌ Uso: `!rallado @usuario`")
+    if jugador2 == jugador1:
+        return await ctx.send("❌ No puedes jugar contra ti mismo.")
+    if jugador2.bot:
+        return await ctx.send("❌ No puedes jugar contra un bot.")
 
+    # Estado del juego: 0 = vacío, 1 = ❌ (jug1), 2 = ⭕ (jug2)
+    tablero = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    turno = 1  # 1 = jugador1, 2 = jugador2
+    juego_activo = True
 
+    # Crear los 9 botones
+    def crear_botones():
+        vista = discord.ui.View(timeout=300)  # 5 minutos de límite
+        for i in range(9):
+            emoji = "⬜"
+            desactivado = True
+            if tablero[i] == 1:
+                emoji = "❌"
+            elif tablero[i] == 2:
+                emoji = "⭕"
+            else:
+                desactivado = False
 
+            boton = discord.ui.Button(
+                label=emoji,
+                custom_id=f"casilla_{i}",
+                disabled=desactivado,
+                row=i // 3
+            )
+            boton.callback = lambda inter, idx=i: presionar_casilla(inter, idx)
+            vista.add_item(boton)
+        return vista
 
+    # Verificar si alguien ganó
+    def hay_ganador():
+        combinaciones = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Horizontales
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Verticales
+            [0, 4, 8], [2, 4, 6]              # Diagonales
+        ]
+        for a, b, c in combinaciones:
+            if tablero[a] == tablero[b] == tablero[c] != 0:
+                return tablero[a]
+        return None
 
+    # Verificar empate
+    def es_empate():
+        return all(casilla != 0 for casilla in tablero)
 
+    # Manejar clic en botón
+    async def presionar_casilla(interaction: discord.Interaction, indice: int):
+        nonlocal turno, juego_activo
 
+        if not juego_activo:
+            await interaction.response.defer()
+            return
+
+        # Verificar quién puede jugar
+        if turno == 1 and interaction.user != jugador1:
+            await interaction.response.send_message("❌ No es tu turno o no eres el jugador.", ephemeral=True)
+            return
+        if turno == 2 and interaction.user != jugador2:
+            await interaction.response.send_message("❌ No es tu turno o no eres el jugador.", ephemeral=True)
+            return
+
+        # Casilla ya ocupada
+        if tablero[indice] != 0:
+            await interaction.response.defer()
+            return
+
+        # Colocar ficha
+        tablero[indice] = turno
+
+        # Revisar ganador
+        ganador = hay_ganador()
+        if ganador:
+            juego_activo = False
+            vista_final = crear_botones()
+            vista_final.disable_all_items()
+            simbolo = "❌" if ganador == 1 else "⭕"
+            ganador_user = jugador1 if ganador == 1 else jugador2
+            embed_final = Embed(
+                title=f"🎉 ¡{simbolo} {ganador_user.display_name} GANA!",
+                description="¡Partida terminada!",
+                color=0x00FF66
+            )
+            await interaction.response.edit_message(embed=embed_final, view=vista_final)
+            return
+
+        # Revisar empate
+        if es_empate():
+            juego_activo = False
+            vista_final = crear_botones()
+            vista_final.disable_all_items()
+            embed_final = Embed(
+                title="🤝 ¡EMPATE!",
+                description="El tablero está lleno y nadie ganó.",
+                color=0xFFD700
+            )
+            await interaction.response.edit_message(embed=embed_final, view=vista_final)
+            return
+
+        # Cambiar de turno
+        turno_actual = jugador1 if turno == 1 else jugador2
+        turno_siguiente = jugador2 if turno == 1 else jugador1
+        turno = 2 if turno == 1 else 1
+
+        embed_turno = Embed(
+            title="⭕ TRES EN RAYA ❌",
+            description=f"""
+**{simbolo_turno(turno_actual)} {turno_actual.mention}** jugó.
+¡Es turno de **{simbolo_turno(turno_siguiente)} {turno_siguiente.mention}**!
+            """,
+            color=0x9B59B6
+        )
+        await interaction.response.edit_message(embed=embed_turno, view=crear_botones())
+
+    def simbolo_turno(jugador):
+        return "❌" if jugador == jugador1 else "⭕"
+
+    # Mensaje inicial del juego
+    embed_inicio = Embed(
+        title="⭕ TRES EN RAYA ❌",
+        description=f"""
+🎮 **Partida entre:**
+❌ {jugador1.mention}
+⭕ {jugador2.mention}
+
+👉 **Empieza {jugador1.mention} (❌)** ¡Es tu turno!
+        """,
+        color=0x9B59B6
+    )
+    await ctx.send(embed=embed_inicio, view=crear_botones())
 
 # ═══════════════════════════════════════════
 # 🚀 INICIAR
