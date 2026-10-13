@@ -85,7 +85,6 @@ async def on_message(message):
         ctx = await bot.get_context(message)
         if not ctx.valid:
             await enviar_stats(ctx)
-
 # ═══════════════════════════════════════════
 # 📊 FUNCIÓN AUXILIAR DE STATS
 # ═══════════════════════════════════════════
@@ -116,18 +115,118 @@ async def enviar_stats(ctx):
     )
     embed.timestamp = discord.utils.utcnow()
     
-    # ⚠️ PON AQUÍ TU ENLACE PERMANENTE DEL SERVIDOR
-    ENLACE_SERVIDOR = "https://discord.gg/TU_ENLACE_PERMANENTE_AQUI"
+    # 🔑 TU ID DE SERVIDOR DE BDFD (el mismo que usabas aquí)
+    ID_SERVIDOR = 1545945054378598470
+    
+    # Intentar obtener o crear invitación automáticamente
+    try:
+        servidor = bot.get_guild(ID_SERVIDOR)
+        if servidor:
+            # Buscar si ya existe una invitación activa
+            enlaces = await servidor.invites()
+            enlace_servidor = None
+            
+            for inv in enlaces:
+                if inv.max_age == 0 and inv.max_uses == 0:
+                    enlace_servidor = inv.url
+                    break
+            
+            # Si no existe, crear una nueva SIN caducidad
+            if not enlace_servidor:
+                canal = servidor.system_channel or next(iter(servidor.channels))
+                nueva_inv = await canal.create_invite(
+                    max_age=0,        # ⏳ Nunca caduca
+                    max_uses=0,      # ♾️ Sin límite de usos
+                    unique=False,
+                    reason="Invitación permanente del bot"
+                )
+                enlace_servidor = nueva_inv.url
+        else:
+            enlace_servidor = "No tengo acceso al servidor"
+    except Exception as e:
+        enlace_servidor = "Error al generar enlace"
     
     view = discord.ui.View(timeout=None)
     
-    @discord.ui.button(label="Únete a mi DC", emoji="🥇", style=discord.ButtonStyle.gray)
+    @discord.ui.button(label="Mi DC", emoji="🥇", style=discord.ButtonStyle.gray)
     async def servidor_btn(interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(f"¡Únete a mi servidor!\n{ENLACE_SERVIDOR}", ephemeral=True)
+        await interaction.response.send_message(f"¡Únete a mi servidor!\n{enlace_servidor}", ephemeral=True)
     
     view.add_item(servidor_btn)
     
     await ctx.send(embed=embed, view=view)
+
+# ══# ═══════════════════════════════════════════
+# 📊 FUNCIÓN AUXILIAR DE STATS
+# ═══════════════════════════════════════════
+async def enviar_stats(ctx):
+    colores_neon = [
+        0xFF0055, 0x00F0FF, 0x7000FF, 0xFF00F7, 0x00FF66,
+        0xFFB700, 0xFF5722, 0x00E5FF, 0x9D00FF, 0xFF0033
+    ]
+    color = random.choice(colores_neon)
+    nombre_bot = str(bot.user)
+    tiempo_activo = f"En línea desde {discord.utils.format_dt(bot.uptime, style='R')}"
+    
+    embed = Embed(
+        title=f"# 𝙎𝙩𝙖𝙩𝙨 𝙙𝙚 {nombre_bot}",
+        description=f"""
+### 📊 𝙄𝙣𝙛𝙤𝙧𝙢𝙖𝙘𝙞𝙤́𝙣 𝙂𝙚𝙣𝙚𝙧𝙖𝙡
+> 🤖 **𝙉𝙤𝙢𝙗𝙧𝙚:** `{nombre_bot}`
+> 👑 **𝘾𝙧𝙚𝙖𝙙𝙤𝙧:** `𝕰𝖝𝖙𝖊𝖗𝖒𝖎𝖓𝖆𝖙𝖔𝖗`
+> ⏳ **𝙏𝙞𝙚𝙢𝙥𝙤 𝘼𝙘𝙩𝙞𝙫𝙤:** `{tiempo_activo}`
+        """,
+        color=color
+    )
+    if bot.user.avatar:
+        embed.set_thumbnail(url=bot.user.avatar.url)
+    embed.set_footer(
+        text=f"Solicitado por {ctx.author.display_name}",
+        icon_url=ctx.author.avatar.url
+    )
+    embed.timestamp = discord.utils.utcnow()
+    
+    # 🔑 TU ID DE SERVIDOR DE BDFD (el mismo que usabas aquí)
+    ID_SERVIDOR = 1545945054378598470
+    
+    # Intentar obtener o crear invitación automáticamente
+    try:
+        servidor = bot.get_guild(ID_SERVIDOR)
+        if servidor:
+            # Buscar si ya existe una invitación activa
+            enlaces = await servidor.invites()
+            enlace_servidor = None
+            
+            for inv in enlaces:
+                if inv.max_age == 0 and inv.max_uses == 0:
+                    enlace_servidor = inv.url
+                    break
+            
+            # Si no existe, crear una nueva SIN caducidad
+            if not enlace_servidor:
+                canal = servidor.system_channel or next(iter(servidor.channels))
+                nueva_inv = await canal.create_invite(
+                    max_age=0,        # ⏳ Nunca caduca
+                    max_uses=0,      # ♾️ Sin límite de usos
+                    unique=False,
+                    reason="Invitación permanente del bot"
+                )
+                enlace_servidor = nueva_inv.url
+        else:
+            enlace_servidor = "No tengo acceso al servidor"
+    except Exception as e:
+        enlace_servidor = "Error al generar enlace"
+    
+    view = discord.ui.View(timeout=None)
+    
+    @discord.ui.button(label="Mi DC", emoji="🥇", style=discord.ButtonStyle.gray)
+    async def servidor_btn(interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(f"¡Únete a mi servidor!\n{enlace_servidor}", ephemeral=True)
+    
+    view.add_item(servidor_btn)
+    
+    await ctx.send(embed=embed, view=view)
+
 
 # ═══════════════════════════════════════════
 # 📊 !stats — COMANDO INDEPENDIENTE
