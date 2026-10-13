@@ -53,14 +53,14 @@ _cargar_datos()
 # ═══════════════════════════════════════════
 TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = True  # ⚠️ ¡NO OLVIDES ACTIVAR ESTO EN EL PORTAL DE DISCORD!
 
 bot = commands.Bot(
     command_prefix="!",
     intents=intents,
     case_insensitive=True
 )
-bot.uptime = discord.utils.utcnow()  # ✅ Para calcular tiempo activo
+bot.uptime = discord.utils.utcnow()
 
 # ═══════════════════════════════════════════
 # 🟢 ENCENDIDO
@@ -69,23 +69,6 @@ bot.uptime = discord.utils.utcnow()  # ✅ Para calcular tiempo activo
 async def on_ready():
     print(f"\n✅ Conectado: {bot.user}")
     print(f"📋 Comandos: {[c.name for c in bot.commands]}\n")
-
-# ═══════════════════════════════════════════
-# 🔄 EVENTO DE MENCIÓN — ¡NO LO BORRES!
-# ═══════════════════════════════════════════
-@bot.event
-async def on_message(message):
-    if message.author == bot.user:
-        return
-    
-    # Si mencionan al bot, muestra las estadísticas
-    if bot.user.mentioned_in(message) and not message.mention_everyone:
-        ctx = await bot.get_context(message)
-        if not ctx.valid:
-            await mostrar_stats(ctx)
-    
-    # ✅ ¡NUNCA BORRES ESTA LÍNEA! Procesa los comandos normales
-    await bot.process_commands(message)
 
 # ═══════════════════════════════════════════
 # 📊 FUNCIÓN COMPARTIDA DE STATS
@@ -117,22 +100,43 @@ async def mostrar_stats(ctx):
     )
     embed.timestamp = discord.utils.utcnow()
     
-    # Crear botones
+    # Enlaces de los botones — ¡PON LOS TUYOS AQUÍ!
+    enlace_servidor = "https://discord.gg/TU_ENLACE_REAL"  # ← CAMBIA ESTO
+    enlace_invitar = f"https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot"
+    
     view = discord.ui.View(timeout=None)
     
     @discord.ui.button(label="Mi DC", emoji="🥇", style=discord.ButtonStyle.gray)
     async def servidor_btn(interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("¡Únete a mi servidor! https://discord.gg/tuenlace", ephemeral=True)
+        await interaction.response.send_message(f"¡Únete a mi servidor!\n{enlace_servidor}", ephemeral=True)
     
     @discord.ui.button(label="Invitame", emoji="🎇", style=discord.ButtonStyle.gray)
     async def invitar_btn(interaction: discord.Interaction, button: discord.ui.Button):
-        enlace = f"https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot"
-        await interaction.response.send_message(f"¡Invítame a tu servidor!\n{enlace}", ephemeral=True)
+        await interaction.response.send_message(f"¡Invítame a tu servidor!\n{enlace_invitar}", ephemeral=True)
     
     view.add_item(servidor_btn)
     view.add_item(invitar_btn)
     
     await ctx.send(embed=embed, view=view)
+
+# ═══════════════════════════════════════════
+# 🔄 EVENTO DE MENCIÓN — CORREGIDO
+# ═══════════════════════════════════════════
+@bot.event
+async def on_message(message):
+    # Ignorar mensajes del propio bot
+    if message.author == bot.user:
+        return
+    
+    # Procesar comandos PRIMERO — ¡ESTO ES IMPORTANTE!
+    await bot.process_commands(message)
+    
+    # Luego revisar si mencionaron al bot
+    if bot.user.mentioned_in(message) and not message.mention_everyone:
+        ctx = await bot.get_context(message)
+        # Solo mostrar stats si NO era un comando válido
+        if not ctx.valid:
+            await mostrar_stats(ctx)
 
 # ═══════════════════════════════════════════
 # 📊 !stats
@@ -158,6 +162,8 @@ async def saldo_cmd(ctx):
         value=f"```yaml\n{saldo:,}\n```",
         inline=False
     )
+    # ✅ Tu GIF de lluvia de dinero
+    embed.set_thumbnail(url="https://media.tenor.com/n4DonP_Qv1MAAAAi/make-it-rain-money.gif")
     embed.set_footer(
         text=f"Revisado por: {ctx.author.display_name}",
         icon_url=ctx.author.avatar.url
@@ -191,7 +197,7 @@ async def apuesta_cmd(ctx, cantidad=None):
             f"<a:money:1548943165040496793> Tu saldo: **{saldo_actual:,}**"
         )
 
-    # ✅ Se descuenta INMEDIATAMENTE al apostar
+    # Se descuenta INMEDIATAMENTE al apostar
     await establecer_saldo(user_id, saldo_actual - apostado)
 
     embed_espere = Embed(
