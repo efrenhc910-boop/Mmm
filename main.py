@@ -79,7 +79,7 @@ async def saldo_cmd(ctx):
 
     embed = Embed(
         title="<a:Crown1:1548943482561765476>  BÓVEDA DE ORO",
-        description="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        description="",
         color=0xFFD700
     )
     embed.add_field(
@@ -127,7 +127,6 @@ async def apuesta_cmd(ctx, cantidad=None):
     embed_espere = Embed(
         title="<a:NewFlame:1548943658521202780>  LANZANDO MONEDA...",
         description=f"""
-<a:Flame:1545966602468597802> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <a:BlueFire:1547845097817645096>
 
 <a:PinkFlameFlicker:1547845151844470807> **Apostaste:** `{apostado:,}` monedas
 
