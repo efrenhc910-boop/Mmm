@@ -304,17 +304,5 @@ async def adm_cmd(ctx, usuario=None, cantidad=None):
 
     await ctx.send(embed=embed)
 
-# ═══════════════════════════════════════════
-# � AQUÍ ABAJO PEGA OTROS COMANDOS NUEVOS
-# ═══════════════════════════════════════════
-
-
-
-
-
-
-
-# ═══════════════════════════════════════════
-# 🚀 INICIAR
-# ═══════════════════════════════════════════
+# alch nosé 
 bot.run(TOKEN)
