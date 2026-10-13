@@ -389,46 +389,57 @@ async def adm_cmd(ctx, usuario=None, cantidad=None):
 # ═══════════════════════════════════════════
 # 📌 AQUÍ ABAJO PEGA TUS COMANDOS NUEVOS 👇
 # ═══════════════════════════════════════════
+
 @bot.command(name="ranking", aliases=["top"])
 async def ranking_cmd(ctx):
-    # Obtener todos los usuarios con saldo
     lista_usuarios = []
     
+    # Recorrer TODOS los registros del JSON
     for clave, cantidad in _datos.items():
+        # Intentar extraer el ID del usuario de distintas formas
+        user_id = None
+        
+        # Formato: "saldo_123456789"
         if clave.startswith("saldo_"):
+            id_parte = clave.replace("saldo_", "")
             try:
-                usuario_id = int(clave.replace("saldo_", ""))
-                monedas = int(cantidad)
-                lista_usuarios.append((-monedas, usuario_id, monedas))  # negativo para ordenar ascendente = descendente
-            except (ValueError, TypeError):
+                user_id = int(id_parte)
+            except ValueError:
                 continue
+        # Formato directo: "123456789"
+        else:
+            try:
+                user_id = int(clave)
+            except ValueError:
+                continue
+        
+        # Validar cantidad
+        try:
+            monedas = int(cantidad)
+            if monedas > 0:
+                lista_usuarios.append((-monedas, user_id, monedas))
+        except (ValueError, TypeError):
+            continue
     
-    # Ordenar de mayor a menor y tomar los primeros 10
+    # Ordenar y tomar top 10
     lista_usuarios.sort()
     top10 = lista_usuarios[:10]
     
-    # Emojis para los puestos
     medallas = ["🥇", "🥈", "🥉"] + ["🏅"] * 7
-    
-    # Construir descripción
     descripcion = ""
+    
     for i, (_, user_id, monedas) in enumerate(top10, 1):
         try:
             usuario = await bot.fetch_user(user_id)
-            nombre = usuario.display_name if usuario else f"Usuario #{i}"
-        except discord.NotFound:
-            nombre = f"Usuario #{i}"
-        except discord.HTTPException:
+            nombre = usuario.display_name
+        except:
             nombre = f"Usuario #{i}"
         
-        medalla = medallas[i - 1]
-        descripcion += f"{medalla} **#{i} — {nombre}**\n➥ **{monedas:,}** monedas de oro\n\n"
+        descripcion += f"{medallas[i-1]} **#{i} — {nombre}**\n➥ **{monedas:,}** monedas de oro\n\n"
     
-    # Si no hay suficientes usuarios
     if not descripcion:
-        descripcion = "😕 No hay usuarios con monedas todavía."
+        descripcion = "😕 No hay usuarios con monedas todavía.\n\n💡 Si sabes que sí hay, revisa el formato de las claves en datos.json"
     
-    # Crear el embed
     embed = Embed(
         title="🏆 Ranking de monedas de oro",
         description=descripcion.strip(),
@@ -437,7 +448,6 @@ async def ranking_cmd(ctx):
     embed.set_footer(text="★★• Ranking — Más ricos primero")
     
     await ctx.send(embed=embed)
-
 
 
 
