@@ -1,0 +1,652 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08070d">
+
+  <meta name="description" content="ARK: un nuevo universo digital. Descubre la plataforma RPG, su tecnología y su futuro.">
+
+  <title>ARK — Beyond the Ordinary</title>
+
+  <style>
+    :root {
+      --bg: #08070d;
+      --surface: #100e19;
+      --surface-light: #171321;
+      --purple: #a855f7;
+      --purple-light: #d8a5ff;
+      --red: #ff3158;
+      --text: #f5f1ff;
+      --muted: #9c96ad;
+      --border: rgba(185, 139, 255, .16);
+      --glow: rgba(168, 85, 247, .2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 90px;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 15% 20%,
+          rgba(116, 44, 191, .15), transparent 42%),
+        radial-gradient(ellipse at 85% 45%,
+          rgba(255, 36, 84, .08), transparent 38%),
+        linear-gradient(180deg, #08070d, #0b0812 55%, #08070d);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(8, 7, 13, .82);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .nav-inner {
+      min-height: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 1.22rem;
+      font-weight: 900;
+      letter-spacing: .19em;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(194, 145, 255, .65);
+      border-radius: 11px;
+      color: white;
+      background: linear-gradient(135deg,
+        rgba(168,85,247,.3), rgba(255,49,88,.12));
+      box-shadow: 0 0 24px var(--glow);
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brand span:last-child {
+      background: linear-gradient(90deg, #fff, #cba1ff 70%, #ff8197);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-cta {
+      padding: 10px 17px;
+      border: 1px solid rgba(168,85,247,.55);
+      border-radius: 10px;
+      color: white !important;
+      background: rgba(168,85,247,.09);
+      transition: .2s ease;
+    }
+
+    .nav-cta:hover {
+      background: rgba(168,85,247,.2);
+      box-shadow: 0 0 22px var(--glow);
+    }
+
+    .hero {
+      min-height: 670px;
+      padding: 110px 0 100px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      width: 520px;
+      height: 520px;
+      right: -100px;
+      top: 65px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(139, 56, 231, .16), rgba(255,49,88,.05) 42%,
+        transparent 70%);
+      filter: blur(12px);
+      animation: breathe 7s ease-in-out infinite;
+    }
+
+    .hero-content {
+      max-width: 780px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(168,85,247,.06);
+      color: #d5b6ff;
+      font-size: .75rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      box-shadow: 0 0 12px var(--purple);
+    }
+
+    h1 {
+      font-size: clamp(3.6rem, 10vw, 7.8rem);
+      line-height: .94;
+      font-weight: 950;
+      letter-spacing: -.075em;
+    }
+
+    .hero-title {
+      background: linear-gradient(115deg,
+        #ffffff 10%, #d8b4ff 48%, #a855f7 76%, #ff5276);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 36px rgba(168,85,247,.12));
+    }
+
+    .hero h2 {
+      margin-top: 25px;
+      font-size: clamp(1.1rem, 3vw, 1.65rem);
+      font-weight: 500;
+      color: #ded5ed;
+      letter-spacing: -.025em;
+    }
+
+    .hero-description {
+      max-width: 590px;
+      margin-top: 17px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.9;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 13px;
+      margin-top: 34px;
+    }
+
+    .btn {
+      min-height: 49px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 21px;
+      border-radius: 11px;
+      font-size: .9rem;
+      font-weight: 750;
+      transition: transform .2s, box-shadow .2s, background .2s;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(110deg, #9333ea, #bd36a9 65%, #ed315d);
+      box-shadow: 0 8px 30px rgba(168,85,247,.18);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 10px 36px rgba(168,85,247,.3);
+    }
+
+    .btn-secondary {
+      color: #e8def7;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.025);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,.07);
+    }
+
+    .hero-note {
+      margin-top: 18px;
+      color: #777184;
+      font-size: .79rem;
+    }
+
+    .section {
+      padding: 85px 0;
+    }
+
+    .section-heading {
+      max-width: 650px;
+      margin-bottom: 35px;
+    }
+
+    .section-label {
+      margin-bottom: 12px;
+      color: #c99bff;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h2.section-title {
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      line-height: 1.15;
+      letter-spacing: -.05em;
+    }
+
+    .section-description {
+      margin-top: 14px;
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 17px;
+    }
+
+    .feature-card {
+      min-height: 220px;
+      padding: 25px;
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      background: linear-gradient(145deg,
+        rgba(255,255,255,.035), rgba(255,255,255,.008));
+      transition: transform .25s, border-color .25s,
+        background .25s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(168,85,247,.42);
+      background: linear-gradient(145deg,
+        rgba(168,85,247,.09), rgba(255,255,255,.01));
+    }
+
+    .feature-icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 22px;
+      border: 1px solid rgba(168,85,247,.23);
+      border-radius: 13px;
+      background: rgba(168,85,247,.09);
+      color: #d7b4ff;
+      font-size: 1.3rem;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 9px;
+      font-size: 1.05rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.8;
+    }
+
+    .vision {
+      padding: 38px;
+      border: 1px solid rgba(168,85,247,.23);
+      border-radius: 20px;
+      background:
+        radial-gradient(ellipse at 100% 0%,
+          rgba(168,85,247,.12), transparent 55%),
+        linear-gradient(135deg, #110d1b, #0d0a12);
+    }
+
+    .vision h2 {
+      max-width: 700px;
+      font-size: clamp(1.8rem, 5vw, 2.7rem);
+      line-height: 1.2;
+      letter-spacing: -.04em;
+    }
+
+    .vision p {
+      max-width: 690px;
+      margin-top: 16px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .vision .btn {
+      margin-top: 25px;
+    }
+
+    .footer {
+      padding: 30px 0;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-copy {
+      color: #777184;
+      font-size: .8rem;
+    }
+
+    .footer-brand {
+      font-size: .9rem;
+      font-weight: 900;
+      letter-spacing: .16em;
+      color: #d6b6ff;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: .7; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    @media (max-width: 760px) {
+      .container {
+        width: min(100% - 30px, 600px);
+      }
+
+      .nav-inner {
+        min-height: 68px;
+      }
+
+      .nav-links {
+        gap: 15px;
+        font-size: .8rem;
+      }
+
+      .nav-links .optional {
+        display: none;
+      }
+
+      .nav-cta {
+        padding: 8px 11px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 105px 0 90px;
+      }
+
+      .hero::before {
+        width: 340px;
+        height: 340px;
+        right: -180px;
+        top: 90px;
+      }
+
+      .hero-description {
+        font-size: .94rem;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        min-height: auto;
+      }
+
+      .section {
+        padding: 65px 0;
+      }
+
+      .vision {
+        padding: 25px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="navbar">
+    <nav class="container nav-inner" aria-label="Navegación principal">
+      <a class="brand" href="#inicio" aria-label="ARK, inicio">
+        <span class="brand-mark">A</span>
+        <span>ARK</span>
+      </a>
+
+      <div class="nav-links">
+        <a class="optional" href="#universo">Universo</a>
+        <a href="#tecnologia">Tecnología</a>
+        <a class="nav-cta" href="#acceso">Explorar ARK ↗</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container" id="inicio">
+      <div class="hero-content">
+        <div class="eyebrow">
+          <span class="status-dot"></span>
+          Un nuevo universo digital
+        </div>
+
+        <h1 class="hero-title">ARK</h1>
+
+        <h2>Más allá de lo ordinario.</h2>
+
+        <p class="hero-description">
+          Un universo donde la tecnología, la inteligencia artificial
+          y la progresión RPG convergen. ARK nace con una idea:
+          construir una experiencia digital que evolucione junto a
+          su comunidad.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#acceso">
+            Descubrir ARK <span aria-hidden="true">↗</span>
+          </a>
+
+          <a class="btn btn-secondary" href="#universo">
+            Explorar el universo
+          </a>
+        </div>
+
+        <p class="hero-note">
+          Una plataforma en desarrollo. El universo comienza aquí.
+        </p>
+      </div>
+    </section>
+
+    <section class="section container" id="universo">
+      <div class="section-heading reveal">
+        <p class="section-label">El universo ARK</p>
+        <h2 class="section-title">
+          Diseñado para evolucionar.
+        </h2>
+        <p class="section-description">
+          Una plataforma con una identidad propia, preparada para
+          conectar experiencias, jugadores y tecnología en un mismo
+          ecosistema.
+        </p>
+      </div>
+
+      <div class="feature-grid" id="tecnologia">
+        <article class="feature-card reveal">
+          <div class="feature-icon" aria-hidden="true">⌘</div>
+          <h3>Experiencia RPG</h3>
+          <p>
+            Una base preparada para integrar perfiles y sistemas de
+            juego a medida que se definan las mecánicas de ARK.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <div class="feature-icon" aria-hidden="true">✳</div>
+          <h3>Inteligencia artificial</h3>
+          <p>
+            Un componente inteligente pensado para enriquecer la
+            experiencia, con reglas y límites definidos por el sistema.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <div class="feature-icon" aria-hidden="true">⌬</div>
+          <h3>Un ecosistema conectado</h3>
+          <p>
+            Una visión que une la web y Discord mediante una
+            arquitectura preparada para crecer.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section container" id="acceso">
+      <div class="vision reveal">
+        <p class="section-label">El siguiente paso</p>
+        <h2>El futuro de ARK se construye desde aquí.</h2>
+        <p>
+          Esta es la primera etapa de la plataforma. El acceso de
+          usuarios, los perfiles conectados y las funciones del juego
+          se habilitarán cuando sus servicios estén implementados.
+        </p>
+
+        <a class="btn btn-primary" href="#inicio">
+          Volver al inicio ↑
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <a class="footer-brand" href="#inicio">ARK</a>
+      <p class="footer-copy">
+        © <span id="year"></span> ARK. Un universo en desarrollo.
+      </p>
+      <p class="footer-copy">Creado para evolucionar.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Año automático del pie de página.
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+
+    // Aparición progresiva de las secciones al desplazarse.
+    const elements = document.querySelectorAll(".reveal");
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+
+      elements.forEach((element) => observer.observe(element));
+    } else {
+      elements.forEach((element) => element.classList.add("visible"));
+    }
+  </script>
+</body>
+</html>
